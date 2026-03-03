@@ -52,7 +52,7 @@ model Skill {
   name        String
   slug        String   @unique
   description String
-  longDesc    String?   @db.Text
+  longDesc    String?
   version     String   @default("1.0.0")
 
   // Pricing
@@ -67,7 +67,7 @@ model Skill {
 
   // Metadata
   status      String   @default("DRAFT") // DRAFT, PENDING_REVIEW, APPROVED, REJECTED, ARCHIVED
-  rejectionReason String? @db.Text // Reason for rejection
+  rejectionReason String? // Reason for rejection
   license     String   @default("MIT")   // MIT, APACHE_2_0, GPL_3_0, BSD_3_CLAUSE, CUSTOM
   official    Boolean  @default(false)  // Official tag
 
@@ -153,7 +153,7 @@ model Order {
 model Review {
   id        String   @id @default(cuid())
   rating    Int      // 1-5 stars
-  comment   String   @db.Text
+  comment   String
 
   skillId   String
   skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
@@ -199,7 +199,7 @@ model AuditLog {
   entity    String   // skill, user, order, review
   entityId  String
   actorId   String?  // Admin who performed the action
-  details   String?  @db.Text // JSON string of additional context
+  details   String? // JSON string of additional context
 
   createdAt DateTime @default(now())
 
