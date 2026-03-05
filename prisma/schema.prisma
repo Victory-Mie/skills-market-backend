@@ -27,6 +27,7 @@ model User {
   purchases  Order[]
   reviews    Review[]
   rentals    Rental[]
+  trials     Trial[]
 
   @@index([email])
 }
@@ -88,6 +89,7 @@ model Skill {
   reviews     Review[]
   orders      Order[]
   rentals     Rental[]
+  trialConfig TrialConfig? // Trial configuration (optional)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -205,4 +207,60 @@ model AuditLog {
 
   @@index([entity, entityId])
   @@index([actorId])
+}
+
+// ==================== Trial System (Week 6) ====================
+
+model TrialConfig {
+  id            String   @id @default(cuid())
+
+  // Relations
+  skillId       String   @unique
+  skill         Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  // Configuration
+  enabled       Boolean  @default(true)
+  duration      Int      @default(15) // Trial duration in minutes (15-60)
+
+  // Container Resources
+  maxCpuPercent Int      @default(50) // Max CPU usage percentage
+  maxMemoryMB   Int      @default(512) // Max memory in MB
+  maxDiskMB     Int      @default(1024) // Max disk in MB
+
+  // Limits
+  maxDailyTrials Int     @default(3) // Max trials per user per day
+
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([skillId])
+}
+
+model Trial {
+  id            String   @id @default(cuid())
+
+  // Relations
+  skillId       String
+  skill         Skill    @relation(fields: [skillId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  // Container Info
+  containerId   String   @unique // Docker container ID
+  containerPort Int      // Container port for accessing the skill
+
+  // Timestamps
+  startedAt     DateTime @default(now())
+  endsAt        DateTime // Auto-calculated based on TrialConfig.duration
+  createdAt     DateTime @default(now())
+
+  // Status
+  status        String   @default("RUNNING") // RUNNING, COMPLETED, FAILED, CANCELLED
+  errorMessage  String?  // Error message if failed
+
+  @@index([userId])
+  @@index([skillId])
+  @@index([status])
+  @@index([endsAt])
 }
